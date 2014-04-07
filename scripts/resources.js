@@ -31,3 +31,19 @@ spyImage.onload = function () {
 	spyReady = true;
 };
 spyImage.src = "assets/spy.png";
+
+// Health Pack Image
+var healthReady = false;
+var healthImage = new Image();
+healthImage.onload = function () {
+	healthReady = true;
+};
+healthImage.src = "assets/health.png";
+
+// Gun Image
+var gunReady = false;
+var gunImage = new Image();
+gunImage.onload = function () {
+	gunReady = true;
+};
+gunImage.src = "assets/gun.png";

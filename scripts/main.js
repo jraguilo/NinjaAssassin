@@ -1,17 +1,19 @@
-var spyLives;
+var lives;
 var ninjaCount;
 var bulletsPlaced;
-var invinPlaced;
+var bullets;
+var healthPlaced;
 var player;
 var levelComplete = false;
 var level;
+var score;
+var playerDead;
 
 //Create the canvas
-var canvas = document.createElement("canvas");
+var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
-canvas.width = 500;
+canvas.width = 450;
 canvas.height = 500;
-document.body.appendChild(canvas);
 
 //Player Information
 
@@ -22,9 +24,15 @@ function reset() {
     briefcaseLocation = new Coordinates();
     placeBriefcase();
     placeNinjas(ninjaCount);
-    placeItems(bulletsPlaced,invinPlaced);
+    placeItems(bulletsPlaced,healthPlaced);
     map[0][8].hasSpy=true;
     player = new Actor(0,8);
+    
+    charX = CHAR_START_X;
+    charY = CHAR_START_Y;
+
+    currX = IMAGE_START_X;
+    currY = IMAGE_START_EAST_Y;
 }
 
 function initMap() {
@@ -66,21 +74,25 @@ function drawMap() {
                     ctx.drawImage(roomImage, x*50, y*50 + 50);
             }
             //draw ninjas
-            else if(map[x][y].hasNinja)
+            if(map[x][y].hasNinja) {
                 ctx.drawImage(ninjaImage,0,72,CHAR_WIDTH,CHAR_HEIGHT,
 					x*50,y*50 + 50,CHAR_WIDTH,CHAR_HEIGHT);
+            }
             //draw Spy
-            else if(map[x][y].hasSpy)
+            else if(map[x][y].hasSpy) {
                 ctx.drawImage(spyImage, x*50, y*50 + 50);
+            }
+            //draw Items
+            else if(map[x][y].hasItem == "Health") {
+                ctx.drawImage(healthImage, x*50, y*50 + 50);
+            }
+            else if(map[x][y].hasItem == "Bullet") {
+                ctx.drawImage(gunImage, x*50, y*50 + 50);
+            }
         }
     }
     }
 }
-
-// The main game loop
-/*var main = function () {
-	render();
-};*/
 
 //Preload Art Assets
 // - Sprite Sheet
@@ -113,10 +125,13 @@ function preloading()
 		isMoving = false;
 		// Let's play this game!
 		level = 1;
-		spyLives = 3;
+		lives = 3;
         ninjaCount = 1;
         bulletsPlaced = 1;
-        invinPlaced = 1;
+        healthPlaced = 1;
+        score = 0;
+        bullets = 3;
+        playerDead = false;
         reset();
 		
 		gameloop = setInterval(update, TIME_PER_FRAME);			
@@ -128,84 +143,151 @@ function preloading()
 //------------
 //Key Handlers
 //------------
-/*function keyDownHandler(event)
-{
-	var keyPressed = String.fromCharCode(event.keyCode);
-
-	if (keyPressed == "W")
-	{		
-		facing = "N";
-		isMoving = true;
-	}
-	else if (keyPressed == "D")
-	{	
-		facing = "E";
-		isMoving = true;		
-	}
-	else if (keyPressed == "S")
-	{	
-		facing = "S";
-		isMoving = true;		
-	}
-	else if (keyPressed == "A")
-	{	
-		facing = "W";
-		isMoving = true;		
-	}
-}*/
 
 function keyUpHandler(event)
 {
 	var keyPressed = String.fromCharCode(event.keyCode);
 	
-	if (keyPressed == "W") {
+	if (keyPressed == "W" && !playerDead) {
         map[player.xCoord][player.yCoord].hasSpy = false;
         player.yCoord = player.yCoord - 1;
         map[player.xCoord][player.yCoord].hasSpy = true;
+        //animate movement
 		moveup();
+		//check if space has a ninja
 		if(map[player.xCoord][player.yCoord].hasNinja) {
+		    window.alert("you have been killed");
 		    attack();
+		}
+		//check if space has item
+		else if(map[player.xCoord][player.yCoord].hasItem != "None") {
+		    window.alert("Found Item");
+		    grabItem(map[player.xCoord][player.yCoord].hasItem);
+		    map[player.xCoord][player.yCoord].hasItem="None";
+		}
+		//check if space has briefcase
+		else if(map[player.xCoord][player.yCoord].hasBriefcase) {
+		    window.alert("level done");
+		    levelCompleteMenu();
 		}
 		moveNinjas();
 	}
-	else if (keyPressed == "D") {
+	else if (keyPressed == "D" && !playerDead) {
 	    map[player.xCoord][player.yCoord].hasSpy = false;
 	    player.xCoord = player.xCoord + 1;
         map[player.xCoord][player.yCoord].hasSpy = true;
 		moveright();
 		if(map[player.xCoord][player.yCoord].hasNinja) {
+		    window.alert("you have been killed");
 		    attack();
+		}
+		//check if space has item
+		else if(map[player.xCoord][player.yCoord].hasItem != "None") {
+		    window.alert("Found Item");
+		    grabItem(map[player.xCoord][player.yCoord].hasItem);
+		    map[player.xCoord][player.yCoord].hasItem="None";
+		}
+		//check if space has briefcase
+		else if(map[player.xCoord][player.yCoord].hasBriefcase) {
+		    window.alert("level done");
+		    levelCompleteMenu();
 		}
 		moveNinjas();
 	}
-	else if (keyPressed == "S") {
+	else if (keyPressed == "S" && !playerDead) {
 	    map[player.xCoord][player.yCoord].hasSpy = false;
 	    player.yCoord = player.yCoord + 1;
         map[player.xCoord][player.yCoord].hasSpy = true;
+
 		movedown();
 		if(map[player.xCoord][player.yCoord].hasNinja) {
+		            window.alert("you have been killed");
 		    attack();
+		}
+		//check if space has item
+		else if(map[player.xCoord][player.yCoord].hasItem != "None") {
+		    window.alert("Found Item");
+		    grabItem(map[player.xCoord][player.yCoord].hasItem);
+		    map[player.xCoord][player.yCoord].hasItem="None";
+		}
+		//check if space has briefcase
+		else if(map[player.xCoord][player.yCoord].hasBriefcase) {
+		    window.alert("level done");
+		    levelCompleteMenu();
 		}
 		moveNinjas();
 	}
-	else if (keyPressed == "A") {	
+	else if (keyPressed == "A" && !playerDead) {	
 		map[player.xCoord][player.yCoord].hasSpy = false;
 		player.xCoord = player.xCoord - 1;
         map[player.xCoord][player.yCoord].hasSpy = true;
 		moveleft();
 		if(map[player.xCoord][player.yCoord].hasNinja) {
+		    window.alert("you have been killed");
 		    attack();
+		}
+		//check if space has item
+		else if(map[player.xCoord][player.yCoord].hasItem != "None") {
+		    window.alert("Found Item");
+		    grabItem(map[player.xCoord][player.yCoord].hasItem);
+		    map[player.xCoord][player.yCoord].hasItem="None";
+		}
+		//check if space has briefcase
+		else if(map[player.xCoord][player.yCoord].hasBriefcase) {
+		    window.alert("level done");
+		    levelCompleteMenu();
 		}
         moveNinjas();
 	}
 	else if (keyPressed == "R") {	
+        //if level is complete, allow the R button to reset game
         if(levelComplete) {
+            levelComplete = false;
+            level += 1;
             reset();
         }
-        else if(spyLives === 0) {
+        //if player was killed, but game is not over, allow R to reset game
+        else if(playerDead && lives > 0) {
+            playerDead = false;
+            reset();
+        }
+        //if game is over, allow the R button to reset game
+        else if(playerDead && lives === 0) {
+            playerDead = false;
+            level = 1;
+		    spyLives = 3;
+            ninjaCount = 1;
+            bulletsPlaced = 1;
+            healthPlaced = 1;
+            score = 0;
             reset();
         }
 	}
+	//Arrow Key Up
+	else if (event.keyCode == 38) {
+	    window.alert(String.fromCharCode(event.keyCode));
+	    if (player.yCoord > 0)
+	        shoot(0);
+	}
+	//Arrow Key Down
+	else if (event.keyCode == 40) {
+	    window.alert(String.fromCharCode(event.keyCode));
+	    if (player.yCoord < 8)
+	        shoot(1);
+	}
+	//Arrow Key Left
+	else if (event.keyCode == 37) {
+	    window.alert("shooting left");
+	    if (player.xCoord > 0)
+	        shoot(2);
+	}
+	//Arrow Key Right
+	else if (event.keyCode == 39) {
+	    window.alert("shooting right");
+	    if (player.yCoord > 0)
+	        shoot(3);
+	}
+	
 }
 
 function moveleft() {
@@ -244,17 +326,17 @@ function movedown() {
 //------------
 //Game Loop
 //------------
-charX = CHAR_START_X;
-charY = CHAR_START_Y;
 
-currX = IMAGE_START_X;
-currY = IMAGE_START_EAST_Y;
 
 function update()
 {		
 	//Clear Canvas
 	ctx.fillStyle = "grey";
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = "bold 24px sans-serif";
+	ctx.fillText("score: " + score + "     " + " level: " + level, 0,24);
+    ctx.fillText("lives: " + lives + " bullets: " + bullets, 0, 48);
 	render();
 	
 	if (isMoving)
@@ -294,8 +376,61 @@ function update()
 
 }
 
-//TODO reinitialize board in case of a new game
-function newLevel() {
-    
+
+function attack() {
+    lives--;
+    playerDead = true;
+    //TODO Display a death message
+    if(lives === 0) {
+        gameOverMenu();
+    }
+    else{
+        lostLifeMenu();
+    }
 }
 
+function grabItem(itemName) {
+    if(itemName == "Bullet") {
+        bullets++;
+        score += 10;
+    }
+    else if(itemName == "Health") {
+        lives++;
+        score += 10;
+    }
+}
+
+function shoot(dir) {
+    
+    window.alert("shot made");
+    //shoot up
+    bullets --;
+    if(dir === 0){
+        if (map[player.xCoord][player.yCoord - 1].hasNinja = true) {
+        
+            window.alert("shooting Ninja");
+            removeNinja(player.xCoord,player.yCoord - 1);
+        }
+    }
+    //shoot down
+    else if (dir == 1) {
+        if (map[player.xCoord][player.yCoord + 1].hasNinja = true)
+            removeNinja(player.xCoord,player.yCoord + 1);
+    }
+    //shoot left
+    else if (dir == 2) {
+        if (map[player.xCoord - 1][player.yCoord].hasNinja = true)
+            removeNinja(player.xCoord - 1,player.yCoord);
+    }
+    //shoot right
+    else if (dir == 3) {
+        if (map[player.xCoord + 1][player.yCoord].hasNinja = true)
+            removeNinja(player.xCoord + 1,player.yCoord);
+    }
+}
+
+//get methods
+
+function getScore() {
+    
+}

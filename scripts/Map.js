@@ -86,7 +86,7 @@ function placeBriefcase() {
 	}
 }
 
-function placeItems(bulletNumber, invinNumber) {
+function placeItems(bulletNumber, healthNumber) {
     //remove any old briefcases
     for (var y = 0; y < 9; y++) {
 		for (var x = 0; x < 9; x++) {
@@ -100,8 +100,8 @@ function placeItems(bulletNumber, invinNumber) {
         placeItem("Bullet");
     }
     
-    for(i = 0; i < invinNumber; i++) {
-        placeItem("Invincibility");
+    for(i = 0; i < healthNumber; i++) {
+        placeItem("Health");
     }
 }
     

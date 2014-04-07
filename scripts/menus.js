@@ -1,18 +1,20 @@
 // Menu functions
 
 // Game Over menu displays when the player has lost all lives
-function gameOver() {
-    
+function gameOverMenu() {
+    window.alert("game over");
 }
 
 //Level Complete menu displays when the player has finished a level
-function levelComplete() {
-    
+function levelCompleteMenu() {
+    levelComplete = true;
+    score += 100;
+    window.alert("level done");
 }
 
 //Lost Life menu displays when the player has lost a life
-function lostLife() {
-    
+function lostLifeMenu() {
+    window.alert("lostlife");
 }
 
 //Display a menu to start the game

@@ -8,7 +8,7 @@ function Actor(x,y) {
 function moveNinjas() {
     for(var i = 0; i < ninjaList.length; i++)
     {
-        //store old ninja location
+        //store old ninja location 
         var x = ninjaList[i].xCoord;
         var y = ninjaList[i].yCoord;
         var newX;
@@ -97,16 +97,6 @@ function moveNinjas() {
     }
 }
 
-function attack() {
-    spyLives--;
-    //TODO Display a death message
-    if(spyLives === 0) {
-        gameOver();
-    }
-    else{
-        lostLife();
-    }
-}
 
 function moveNinja(i, dir) {
     //TODO animate ninja[i] in the given direction
@@ -138,4 +128,13 @@ function moveNinja(i, dir) {
         map[x+1][y].hasNinja = true;
         ninjaList[i].xCoord = x + 1;
     }
+}
+
+function removeNinja(x, y) {
+    for(var i = 0; i < ninjaList.length; i++) {
+        if(ninjaList[i].xCoord == x && ninjaList[i].yCoord == y) {
+            ninjaList.splice(i,1);
+        }
+    }
+    map[x][y].hasNinja = false;
 }

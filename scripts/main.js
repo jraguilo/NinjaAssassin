@@ -148,7 +148,8 @@ function keyUpHandler(event)
 {
 	var keyPressed = String.fromCharCode(event.keyCode);
 	
-	if (keyPressed == "W" && !playerDead) {
+	//Move up
+	if (keyPressed == "W" && !playerDead && player.yCoord > 0) {
         map[player.xCoord][player.yCoord].hasSpy = false;
         player.yCoord = player.yCoord - 1;
         map[player.xCoord][player.yCoord].hasSpy = true;
@@ -156,7 +157,7 @@ function keyUpHandler(event)
 		moveup();
 		//check if space has a ninja
 		if(map[player.xCoord][player.yCoord].hasNinja) {
-		    window.alert("you have been killed");
+		    window.alert("you have been killed by a ninja. Press R to retry.");
 		    attack();
 		}
 		//check if space has item
@@ -172,7 +173,9 @@ function keyUpHandler(event)
 		}
 		moveNinjas();
 	}
-	else if (keyPressed == "D" && !playerDead) {
+	
+	//Move right
+	else if (keyPressed == "D" && !playerDead && player.xCoord < 8) {
 	    map[player.xCoord][player.yCoord].hasSpy = false;
 	    player.xCoord = player.xCoord + 1;
         map[player.xCoord][player.yCoord].hasSpy = true;
@@ -194,7 +197,9 @@ function keyUpHandler(event)
 		}
 		moveNinjas();
 	}
-	else if (keyPressed == "S" && !playerDead) {
+	
+	//Move down
+	else if (keyPressed == "S" && !playerDead && player.yCoord < 8) {
 	    map[player.xCoord][player.yCoord].hasSpy = false;
 	    player.yCoord = player.yCoord + 1;
         map[player.xCoord][player.yCoord].hasSpy = true;
@@ -217,7 +222,9 @@ function keyUpHandler(event)
 		}
 		moveNinjas();
 	}
-	else if (keyPressed == "A" && !playerDead) {	
+	
+	//Move left
+	else if (keyPressed == "A" && !playerDead && player.xCoord > 0) {	
 		map[player.xCoord][player.yCoord].hasSpy = false;
 		player.xCoord = player.xCoord - 1;
         map[player.xCoord][player.yCoord].hasSpy = true;

@@ -5,6 +5,7 @@ var bullets;
 var healthPlaced;
 var player;
 var levelComplete = false;
+var gameStarted = false;
 var level;
 var score;
 var playerDead;
@@ -20,6 +21,7 @@ canvas.height = 500;
 
 //starts a new game
 function reset() {
+    setLevel();
     initMap();
     briefcaseLocation = new Coordinates();
     placeBriefcase();
@@ -52,6 +54,7 @@ function initMap() {
 	map[1][7].isRoom = true;
 	map[4][1].isRoom = true;
 	map[4][4].isRoom = true;
+	map[4][7].isRoom = true;
 	map[7][1].isRoom = true;
 	map[7][4].isRoom = true;
 	map[7][7].isRoom = true;
@@ -116,25 +119,32 @@ var gameloop, facing, currX, currY, charX, charY, isMoving;
 
 function preloading()
 {	
-	if (charImage.ready)
+	if (charImage.ready && bgReady)
 	{
 		clearInterval(preloader);
-		
+		//get highscores and print them to screen
+		/*
+		    getHighScore(1);
+		    getHighScore(2);
+		    getHighScore(3);
+		*/
+		ctx.drawImage(bgImage, 0,0);
+        ctx.font = "bold 24px sans-serif";
+        ctx.textAlign = 'center';
+	    ctx.fillText("High Scores:", 225,150);
+	    ctx.fillText("1. Placeholder:", 225,175);
+	    ctx.fillText("2. Placeholder", 225, 200);
+	    ctx.fillText("3. Placeholder", 225,225);
+	    ctx.fillText("Press R to Start Game", 225,250);
 		//Initialise game
 		facing = "E"; //N = North, E = East, S = South, W = West
 		isMoving = false;
 		// Let's play this game!
 		level = 1;
 		lives = 3;
-        ninjaCount = 1;
-        bulletsPlaced = 1;
-        healthPlaced = 1;
         score = 0;
         bullets = 3;
         playerDead = false;
-        reset();
-		
-		gameloop = setInterval(update, TIME_PER_FRAME);			
 		//document.addEventListener("keydown",keyDownHandler, false);	
 		document.addEventListener("keyup",keyUpHandler, false);	
 	}
@@ -248,7 +258,12 @@ function keyUpHandler(event)
 	}
 	else if (keyPressed == "R") {	
         //if level is complete, allow the R button to reset game
-        if(levelComplete) {
+        if(!gameStarted) {
+            gameStarted = true;
+            gameloop = setInterval(update, TIME_PER_FRAME);	
+            reset();
+        }
+        else if(levelComplete) {
             levelComplete = false;
             level += 1;
             reset();
@@ -338,9 +353,9 @@ function movedown() {
 function update()
 {		
 	//Clear Canvas
-	ctx.fillStyle = "grey";
-
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.fillStyle = "black";
+    ctx.textAlign = 'left';
+	ctx.drawImage(bgImage, 0,0);
     ctx.font = "bold 24px sans-serif";
 	ctx.fillText("score: " + score + "     " + " level: " + level, 0,24);
     ctx.fillText("lives: " + lives + " bullets: " + bullets, 0, 48);
@@ -436,8 +451,23 @@ function shoot(dir) {
     }
 }
 
+function setLevel() {
+    //set number of ninjas
+    ninjaCount = (level / 2);
+    //set health packs
+    if(level == 1 || (level % 4) === 0)        
+        healthPlaced = 1;
+    else
+        healthPlaced = 0;
+    //set bullets
+    if(level == 1 || level % 3 === 0)
+        bulletsPlaced = 1;
+    else
+        bulletsPlaced = 0;
+}
+
 //get methods
 
-function getScore() {
+function getHighScore(rank) {
     
 }

@@ -47,3 +47,11 @@ gunImage.onload = function () {
 	gunReady = true;
 };
 gunImage.src = "assets/gun.png";
+
+//Background Image
+var bgReady = false;
+var bgImage = new Image();
+bgImage.onload = function () {
+	bgReady = true;
+};
+bgImage.src = "assets/background.png";

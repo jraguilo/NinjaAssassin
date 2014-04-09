@@ -2,7 +2,7 @@
 //System Values
 //------------
 var STAGE_WIDTH = 500,
-	STAGE_HEIGHT = 500,
+	STAGE_HEIGHT = 450,
 	TIME_PER_FRAME = 33, //this equates to 30 fps
 	GAME_FONTS = "bold 20px sans-serif";
 

@@ -4,11 +4,11 @@ var bulletsPlaced;
 var bullets;
 var healthPlaced;
 var player;
-var levelComplete = false;
-var gameStarted = false;
+//Game Phases: Preload, GameStarted, LevelComplete, LostLife, GameOver
+var gamePhase = "Preload";
 var level;
 var score;
-var playerDead;
+var username;
 
 //Create the canvas
 var canvas = document.getElementById("game");
@@ -16,7 +16,24 @@ var ctx = canvas.getContext("2d");
 canvas.width = 450;
 canvas.height = 500;
 
-//Player Information
+//Preload Function
+function preloading()
+{	
+	if (charImage.ready && bgReady)
+	{
+		clearInterval(preloader);
+		facing = "E"; //N = North, E = East, S = South, W = West
+		isMoving = false;
+		// Let's play this game!
+		level = 1;
+		lives = 3;
+        score = 0;
+        bullets = 3;
+		document.addEventListener("keyup",keyUpHandler, false);
+		//start game loop
+        gameloop = setInterval(update, TIME_PER_FRAME);	
+	}
+}
 
 
 //starts a new game
@@ -36,6 +53,13 @@ function reset() {
     currX = IMAGE_START_X;
     currY = IMAGE_START_EAST_Y;
 }
+
+//completes a game level
+function levelComplete() {
+    gamePhase = "LevelComplete";
+    score += 100;
+}
+
 
 function initMap() {
     // create map
@@ -62,8 +86,79 @@ function initMap() {
 
 // Draw everything
 var render = function () {
-	drawMap();
+
 };
+
+//------------
+//Game Loop
+//------------
+
+function update() {
+    if (gamePhase == "Preload") {
+        renderStart();
+    }
+    else if (gamePhase == "GameStarted" ) {
+        renderGame();
+    }
+    else if (gamePhase == "LevelComplete") {
+        renderComplete();
+    }
+    else if (gamePhase == "LostLife") {
+        renderLost();
+    }
+    else if (gamePhase == "GameOver") {
+        renderGameOver();
+    }
+}
+
+
+function renderGame()
+{		
+	//Clear Canvas
+	ctx.fillStyle = "black";
+    ctx.textAlign = 'left';
+	ctx.drawImage(bgImage, 0,0);
+    ctx.font = "bold 24px sans-serif";
+	ctx.fillText("score: " + score + "     " + " level: " + level, 0,24);
+    ctx.fillText("lives: " + lives + " bullets: " + bullets, 0, 48);
+	drawMap();
+	
+	if (isMoving)
+	{
+		if (facing == "N")
+		{
+			charY -= CHAR_SPEED;
+			currY = IMAGE_START_NORTH_Y;
+		}
+		else if (facing == "E")
+		{
+			charX += CHAR_SPEED;
+			currY = IMAGE_START_EAST_Y;
+		}
+		else if (facing == "S")
+		{
+			charY += CHAR_SPEED;
+			currY = IMAGE_START_SOUTH_Y;
+		}
+		else if (facing == "W")
+		{
+			charX -= CHAR_SPEED;
+			currY = IMAGE_START_WEST_Y;
+		}
+		
+		currX += CHAR_WIDTH;
+		
+		if (currX >= SPRITE_WIDTH)
+			currX = 0;
+	}
+
+	isMoving = false;
+	
+	//Draw Image
+	ctx.drawImage(charImage,currX,currY,CHAR_WIDTH,CHAR_HEIGHT,
+					charX,charY,CHAR_WIDTH,CHAR_HEIGHT);
+
+}
 
 function drawMap() {
     if (roomReady && caseReady && ninjaReady) {
@@ -117,38 +212,7 @@ var preloader = setInterval(preloading, TIME_PER_FRAME);
 
 var gameloop, facing, currX, currY, charX, charY, isMoving;
 
-function preloading()
-{	
-	if (charImage.ready && bgReady)
-	{
-		clearInterval(preloader);
-		//get highscores and print them to screen
-		/*
-		    getHighScore(1);
-		    getHighScore(2);
-		    getHighScore(3);
-		*/
-		ctx.drawImage(bgImage, 0,0);
-        ctx.font = "bold 24px sans-serif";
-        ctx.textAlign = 'center';
-	    ctx.fillText("High Scores:", 225,150);
-	    ctx.fillText("1. Placeholder:", 225,175);
-	    ctx.fillText("2. Placeholder", 225, 200);
-	    ctx.fillText("3. Placeholder", 225,225);
-	    ctx.fillText("Press R to Start Game", 225,250);
-		//Initialise game
-		facing = "E"; //N = North, E = East, S = South, W = West
-		isMoving = false;
-		// Let's play this game!
-		level = 1;
-		lives = 3;
-        score = 0;
-        bullets = 3;
-        playerDead = false;
-		//document.addEventListener("keydown",keyDownHandler, false);	
-		document.addEventListener("keyup",keyUpHandler, false);	
-	}
-}
+
 
 //------------
 //Key Handlers
@@ -159,125 +223,45 @@ function keyUpHandler(event)
 	var keyPressed = String.fromCharCode(event.keyCode);
 	
 	//Move up
-	if (keyPressed == "W" && !playerDead && player.yCoord > 0) {
-        map[player.xCoord][player.yCoord].hasSpy = false;
-        player.yCoord = player.yCoord - 1;
-        map[player.xCoord][player.yCoord].hasSpy = true;
-        //animate movement
-		moveup();
-		//check if space has a ninja
-		if(map[player.xCoord][player.yCoord].hasNinja) {
-		    window.alert("you have been killed by a ninja. Press R to retry.");
-		    attack();
-		}
-		//check if space has item
-		else if(map[player.xCoord][player.yCoord].hasItem != "None") {
-		    window.alert("Found Item");
-		    grabItem(map[player.xCoord][player.yCoord].hasItem);
-		    map[player.xCoord][player.yCoord].hasItem="None";
-		}
-		//check if space has briefcase
-		else if(map[player.xCoord][player.yCoord].hasBriefcase) {
-		    window.alert("level done");
-		    levelCompleteMenu();
-		}
-		moveNinjas();
+	if (keyPressed == "W" && gamePhase == "GameStarted" && player.yCoord > 0) {
+        moveUp();
 	}
 	
 	//Move right
-	else if (keyPressed == "D" && !playerDead && player.xCoord < 8) {
-	    map[player.xCoord][player.yCoord].hasSpy = false;
-	    player.xCoord = player.xCoord + 1;
-        map[player.xCoord][player.yCoord].hasSpy = true;
-		moveright();
-		if(map[player.xCoord][player.yCoord].hasNinja) {
-		    window.alert("you have been killed");
-		    attack();
-		}
-		//check if space has item
-		else if(map[player.xCoord][player.yCoord].hasItem != "None") {
-		    window.alert("Found Item");
-		    grabItem(map[player.xCoord][player.yCoord].hasItem);
-		    map[player.xCoord][player.yCoord].hasItem="None";
-		}
-		//check if space has briefcase
-		else if(map[player.xCoord][player.yCoord].hasBriefcase) {
-		    window.alert("level done");
-		    levelCompleteMenu();
-		}
-		moveNinjas();
+	else if (keyPressed == "D" && gamePhase == "GameStarted" && player.xCoord < 8) {
+        moveRight();
 	}
 	
 	//Move down
-	else if (keyPressed == "S" && !playerDead && player.yCoord < 8) {
-	    map[player.xCoord][player.yCoord].hasSpy = false;
-	    player.yCoord = player.yCoord + 1;
-        map[player.xCoord][player.yCoord].hasSpy = true;
-
-		movedown();
-		if(map[player.xCoord][player.yCoord].hasNinja) {
-		            window.alert("you have been killed");
-		    attack();
-		}
-		//check if space has item
-		else if(map[player.xCoord][player.yCoord].hasItem != "None") {
-		    window.alert("Found Item");
-		    grabItem(map[player.xCoord][player.yCoord].hasItem);
-		    map[player.xCoord][player.yCoord].hasItem="None";
-		}
-		//check if space has briefcase
-		else if(map[player.xCoord][player.yCoord].hasBriefcase) {
-		    window.alert("level done");
-		    levelCompleteMenu();
-		}
-		moveNinjas();
+	else if (keyPressed == "S" && gamePhase == "GameStarted" && player.yCoord < 8) {
+        moveDown();
 	}
 	
 	//Move left
-	else if (keyPressed == "A" && !playerDead && player.xCoord > 0) {	
-		map[player.xCoord][player.yCoord].hasSpy = false;
-		player.xCoord = player.xCoord - 1;
-        map[player.xCoord][player.yCoord].hasSpy = true;
-		moveleft();
-		if(map[player.xCoord][player.yCoord].hasNinja) {
-		    window.alert("you have been killed");
-		    attack();
-		}
-		//check if space has item
-		else if(map[player.xCoord][player.yCoord].hasItem != "None") {
-		    window.alert("Found Item");
-		    grabItem(map[player.xCoord][player.yCoord].hasItem);
-		    map[player.xCoord][player.yCoord].hasItem="None";
-		}
-		//check if space has briefcase
-		else if(map[player.xCoord][player.yCoord].hasBriefcase) {
-		    window.alert("level done");
-		    levelCompleteMenu();
-		}
-        moveNinjas();
+	else if (keyPressed == "A" && gamePhase == "GameStarted" && player.xCoord > 0) {	
+        moveLeft();
 	}
 	else if (keyPressed == "R") {	
         //if level is complete, allow the R button to reset game
-        if(!gameStarted) {
-            gameStarted = true;
-            gameloop = setInterval(update, TIME_PER_FRAME);	
+        if(gamePhase == "Preload") {
+            gamePhase = "GameStarted";
             reset();
         }
-        else if(levelComplete) {
-            levelComplete = false;
+        else if(gamePhase == "LevelComplete") {
+            gamePhase = "GameStarted";
             level += 1;
             reset();
         }
         //if player was killed, but game is not over, allow R to reset game
-        else if(playerDead && lives > 0) {
-            playerDead = false;
+        else if(gamePhase == "LostLife") {
+            gamePhase = "GameStarted";
             reset();
         }
         //if game is over, allow the R button to reset game
-        else if(playerDead && lives === 0) {
-            playerDead = false;
+        else if(gamePhase = "GameOver") {
+            gamePhase = "GameStarted";
             level = 1;
-		    spyLives = 3;
+		    lives = 3;
             ninjaCount = 1;
             bulletsPlaced = 1;
             healthPlaced = 1;
@@ -286,33 +270,184 @@ function keyUpHandler(event)
         }
 	}
 	//Arrow Key Up
-	else if (event.keyCode == 38) {
-	    window.alert(String.fromCharCode(event.keyCode));
+	else if (event.keyCode == 38 && gamePhase == "GameStarted") {
 	    if (player.yCoord > 0)
 	        shoot(0);
 	}
 	//Arrow Key Down
-	else if (event.keyCode == 40) {
-	    window.alert(String.fromCharCode(event.keyCode));
+	else if (event.keyCode == 40 && gamePhase == "GameStarted") {
 	    if (player.yCoord < 8)
 	        shoot(1);
 	}
 	//Arrow Key Left
-	else if (event.keyCode == 37) {
-	    window.alert("shooting left");
+	else if (event.keyCode == 37 && gamePhase == "GameStarted") {
 	    if (player.xCoord > 0)
 	        shoot(2);
 	}
 	//Arrow Key Right
-	else if (event.keyCode == 39) {
-	    window.alert("shooting right");
+	else if (event.keyCode == 39 && gamePhase == "GameStarted") {
 	    if (player.yCoord > 0)
 	        shoot(3);
 	}
 	
 }
 
-function moveleft() {
+function moveUp() {
+    map[player.xCoord][player.yCoord].hasSpy = false;
+    player.yCoord = player.yCoord - 1;
+    map[player.xCoord][player.yCoord].hasSpy = true;
+    //animate movement
+	moveUpAnim();
+	//check if space has a ninja
+	if(map[player.xCoord][player.yCoord].hasNinja) {
+	    attack();
+	}
+	//check if space has item
+	else if(map[player.xCoord][player.yCoord].hasItem != "None") {
+	    grabItem(map[player.xCoord][player.yCoord].hasItem);
+	    map[player.xCoord][player.yCoord].hasItem="None";
+	}
+	//check if space has briefcase
+	else if(map[player.xCoord][player.yCoord].hasBriefcase) {
+	    console.log("level done");
+	    levelComplete();
+	}
+	moveNinjas();
+}
+
+function moveDown() {
+    map[player.xCoord][player.yCoord].hasSpy = false;
+	player.yCoord = player.yCoord + 1;
+    map[player.xCoord][player.yCoord].hasSpy = true;
+    moveDownAnim();
+	if(map[player.xCoord][player.yCoord].hasNinja) {
+	    attack();
+	}
+	//check if space has item
+	else if(map[player.xCoord][player.yCoord].hasItem != "None") {
+	    grabItem(map[player.xCoord][player.yCoord].hasItem);
+	    map[player.xCoord][player.yCoord].hasItem="None";
+	}
+	//check if space has briefcase
+	else if(map[player.xCoord][player.yCoord].hasBriefcase) {
+	    levelComplete();
+	}
+	moveNinjas();
+}
+
+function moveLeft() {
+    map[player.xCoord][player.yCoord].hasSpy = false;
+	player.xCoord = player.xCoord - 1;
+    map[player.xCoord][player.yCoord].hasSpy = true;
+	moveLeftAnim();
+	if(map[player.xCoord][player.yCoord].hasNinja) {
+	    attack();
+	}
+	//check if space has item
+	else if(map[player.xCoord][player.yCoord].hasItem != "None") {
+	    grabItem(map[player.xCoord][player.yCoord].hasItem);
+	    map[player.xCoord][player.yCoord].hasItem="None";
+	}
+	//check if space has briefcase
+	else if(map[player.xCoord][player.yCoord].hasBriefcase) {
+	    levelComplete();
+	}
+    moveNinjas();
+}
+
+function moveRight() {
+    map[player.xCoord][player.yCoord].hasSpy = false;
+	player.xCoord = player.xCoord + 1;
+    map[player.xCoord][player.yCoord].hasSpy = true;
+	moveRightAnim();
+	if(map[player.xCoord][player.yCoord].hasNinja) {
+	    attack();
+	}
+	//check if space has item
+	else if(map[player.xCoord][player.yCoord].hasItem != "None") {
+	    grabItem(map[player.xCoord][player.yCoord].hasItem);
+	    map[player.xCoord][player.yCoord].hasItem="None";
+	}
+	//check if space has briefcase
+	else if(map[player.xCoord][player.yCoord].hasBriefcase) {
+	    levelComplete();
+	}
+	moveNinjas();
+}
+
+//Mobile input handlers
+$("#game").swipe( {
+    swipeUp:function(event, direction, distance, duration, fingerCount) {
+        if(fingerCount == 2 ) {
+            if (player.yCoord > 0)
+	        shoot(0);
+        }
+        else if (gamePhase == "GameStarted" && player.yCoord > 0) {
+            moveUp();
+	    }
+    },
+    swipeDown:function(event, direction, distance, duration, fingerCount) {
+        if(fingerCount == 2) {
+            if (player.yCoord < 8)
+	            shoot(1);
+        }
+        else if (gamePhase == "GameStarted" && player.yCoord < 8) {
+            moveDown();
+	    }
+    },
+    swipeLeft:function(event, direction, distance, duration, fingerCount) {
+        if(fingerCount == 2) {
+            if (player.xCoord > 0)
+	            shoot(2);
+        }
+        if (gamePhase == "GameStarted" && player.xCoord > 0) {
+            moveLeft();
+	    }
+    },
+    swipeRight:function(event, direction, distance, duration, fingerCount) {
+        if(fingerCount == 2) {
+            if (player.xCoord < 8)
+	            shoot(3);
+        }
+        if (gamePhase == "GameStarted" && player.xCoord < 8) {
+            moveRight();
+	    }
+    },
+    tap:function(event, target) {
+        //allow tap to start game
+        if(gamePhase == "Preload") {
+            gamePhase = "GameStarted";
+            reset();
+        }
+        //if level is complete, allow taps to reset game
+        else if(gamePhase == "LevelComplete") {
+            gamePhase = "GameStarted";
+            level += 1;
+            reset();
+        }
+        //if player was killed, but game is not over, allow tap to reset game
+        else if(gamePhase == "LostLife") {
+            gamePhase = "GameStarted";
+            reset();
+        }
+        //if game is over, allow tap to reset game
+        else if(gamePhase = "GameOver") {
+            gamePhase = "GameStarted";
+            level = 1;
+		    lives = 3;
+            ninjaCount = 1;
+            bulletsPlaced = 1;
+            healthPlaced = 1;
+            score = 0;
+            reset();
+        }
+    },
+    
+    threshold:30
+});
+
+//Player animation functions
+function moveLeftAnim() {
     facing = "W";
     for (var i = 0; i < 10; i++) {
     	isMoving = true;
@@ -321,7 +456,7 @@ function moveleft() {
     
 }
 
-function moveright() {
+function moveRightAnim() {
     facing = "E";
     for (var i = 0; i < 10; i++) {
     	isMoving = true;
@@ -329,7 +464,7 @@ function moveright() {
     };
 }
 
-function moveup() {
+function moveUpAnim() {
     facing = "N";
     for (var i = 0; i < 10; i++) {
     	isMoving = true;
@@ -337,7 +472,7 @@ function moveup() {
     };
 }
 
-function movedown() {
+function moveDownAnim() {
     facing = "S";
     for (var i = 0; i < 10; i++) {
     	isMoving = true;
@@ -345,70 +480,24 @@ function movedown() {
     };
 }
 
-//------------
-//Game Loop
-//------------
-
-
-function update()
-{		
-	//Clear Canvas
-	ctx.fillStyle = "black";
-    ctx.textAlign = 'left';
-	ctx.drawImage(bgImage, 0,0);
-    ctx.font = "bold 24px sans-serif";
-	ctx.fillText("score: " + score + "     " + " level: " + level, 0,24);
-    ctx.fillText("lives: " + lives + " bullets: " + bullets, 0, 48);
-	render();
-	
-	if (isMoving)
-	{
-		if (facing == "N")
-		{
-			charY -= CHAR_SPEED;
-			currY = IMAGE_START_NORTH_Y;
-		}
-		else if (facing == "E")
-		{
-			charX += CHAR_SPEED;
-			currY = IMAGE_START_EAST_Y;
-		}
-		else if (facing == "S")
-		{
-			charY += CHAR_SPEED;
-			currY = IMAGE_START_SOUTH_Y;
-		}
-		else if (facing == "W")
-		{
-			charX -= CHAR_SPEED;
-			currY = IMAGE_START_WEST_Y;
-		}
-		
-		currX += CHAR_WIDTH;
-		
-		if (currX >= SPRITE_WIDTH)
-			currX = 0;
-	}
-
-	isMoving = false;
-	
-	//Draw Image
-	ctx.drawImage(charImage,currX,currY,CHAR_WIDTH,CHAR_HEIGHT,
-					charX,charY,CHAR_WIDTH,CHAR_HEIGHT);
-
-}
-
 
 function attack() {
     lives--;
-    playerDead = true;
-    //TODO Display a death message
     if(lives === 0) {
-        gameOverMenu();
+        gamePhase = "GameOver";
+        //TODO submit score
+        //send variable score
+        //check if online
+        if(navigator.onLine)
+            sendScore(username,score);
+    } 
+    else {
+        gamePhase = "LostLife";
     }
-    else{
-        lostLifeMenu();
-    }
+}
+
+function sendScore(username,score){
+    
 }
 
 function grabItem(itemName) {
@@ -424,7 +513,6 @@ function grabItem(itemName) {
 
 function shoot(dir) {
     
-    window.alert("shot made");
     //shoot up
     bullets --;
     if(dir === 0){

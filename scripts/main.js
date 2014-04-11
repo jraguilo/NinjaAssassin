@@ -566,7 +566,8 @@ function attack() {
 }
 
 function sendScore(username,score){
-    var data = "username=" + username + "&score=" + score;
+    //var data = "username=" + username + "&score=" + score;
+    var data = "score=" + score;
     var request = $.ajax({
                     url: "http://laravel-ninjaassasin.rhcloud.com/api/user/score",
                     type: "put",

@@ -8,13 +8,13 @@ roomImage.onload = function () {
 };
 roomImage.src = "assets/room.png";
 
-// Case Image
-var caseReady = false;
-var caseImage = new Image();
-caseImage.onload = function () {
-	caseReady = true;
+// Intel Image
+var intelReady = false;
+var intelImage = new Image();
+intelImage.onload = function () {
+	intelReady = true;
 };
-caseImage.src = "assets/case.png";
+intelImage.src = "assets/intel.png";
 
 // Ninja Image
 var ninjaReady = false;
@@ -24,13 +24,6 @@ ninjaImage.onload = function () {
 };
 ninjaImage.src = "assets/ninja_m.png";
 
-// Spy Image
-var spyReady = false;
-var spyImage = new Image();
-spyImage.onload = function () {
-	spyReady = true;
-};
-spyImage.src = "assets/spy.png";
 
 // Health Pack Image
 var healthReady = false;
@@ -55,3 +48,11 @@ bgImage.onload = function () {
 	bgReady = true;
 };
 bgImage.src = "assets/background.png";
+
+//Fog Image
+var fogReady = false;
+var fogImage = new Image();
+fogImage.onLoad = function() {
+  fogReady = true;  
+};
+fogImage.src = "assets/fog.png";

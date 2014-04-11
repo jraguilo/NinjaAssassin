@@ -6,9 +6,12 @@ var healthPlaced;
 var player;
 //Game Phases: Preload, GameStarted, LevelComplete, LostLife, GameOver
 var gamePhase = "Preload";
+var shootMode = false;
 var level;
 var score;
 var username;
+var audio;
+var audioPaused;
 
 //Create the canvas
 var canvas = document.getElementById("game");
@@ -30,6 +33,10 @@ function preloading()
         score = 0;
         bullets = 3;
 		document.addEventListener("keyup",keyUpHandler, false);
+        audio = document.getElementById("audio");
+        audio.play();
+        audioPaused = false;
+        audio.addEventListener("ended", playAudio, false);
 		//start game loop
         gameloop = setInterval(update, TIME_PER_FRAME);	
 	}
@@ -40,8 +47,8 @@ function preloading()
 function reset() {
     setLevel();
     initMap();
-    briefcaseLocation = new Coordinates();
-    placeBriefcase();
+    intelLocation = new Coordinates();
+    placeIntel();
     placeNinjas(ninjaCount);
     placeItems(bulletsPlaced,healthPlaced);
     map[0][8].hasSpy=true;
@@ -52,6 +59,8 @@ function reset() {
 
     currX = IMAGE_START_X;
     currY = IMAGE_START_EAST_Y;
+    
+    setFog();
 }
 
 //completes a game level
@@ -84,10 +93,6 @@ function initMap() {
 	map[7][7].isRoom = true;
 }
 
-// Draw everything
-var render = function () {
-
-};
 
 //------------
 //Game Loop
@@ -119,8 +124,8 @@ function renderGame()
     ctx.textAlign = 'left';
 	ctx.drawImage(bgImage, 0,0);
     ctx.font = "bold 24px sans-serif";
-	ctx.fillText("score: " + score + "     " + " level: " + level, 0,24);
-    ctx.fillText("lives: " + lives + " bullets: " + bullets, 0, 48);
+	ctx.fillText("level: " + level + "   score: " + score, 0,24);
+    ctx.fillText("lives: " + lives + "   bullets: " + bullets, 0, 48);
 	drawMap();
 	
 	if (isMoving)
@@ -161,31 +166,33 @@ function renderGame()
 }
 
 function drawMap() {
-    if (roomReady && caseReady && ninjaReady) {
+    if (roomReady && intelReady && ninjaReady) {
 	for (var y = 0; y < 9; y++) {
 		for (var x = 0; x < 9; x++) {
 		    //draw rooms and items
-            if(map[x][y].isRoom) {
-                if(map[x][y].hasBriefcase)
-                    ctx.drawImage(caseImage, x*50, y*50 + 50);
-                else
+            if(map[x][y].hasFog) {
+                ctx.drawImage(fogImage, x*50, y*50 + 50);
+            }
+            else {
+                if(map[x][y].isRoom) {
                     ctx.drawImage(roomImage, x*50, y*50 + 50);
-            }
-            //draw ninjas
-            if(map[x][y].hasNinja) {
-                ctx.drawImage(ninjaImage,0,72,CHAR_WIDTH,CHAR_HEIGHT,
-					x*50,y*50 + 50,CHAR_WIDTH,CHAR_HEIGHT);
-            }
-            //draw Spy
-            else if(map[x][y].hasSpy) {
-                ctx.drawImage(spyImage, x*50, y*50 + 50);
-            }
-            //draw Items
-            else if(map[x][y].hasItem == "Health") {
-                ctx.drawImage(healthImage, x*50, y*50 + 50);
-            }
-            else if(map[x][y].hasItem == "Bullet") {
-                ctx.drawImage(gunImage, x*50, y*50 + 50);
+                    if(map[x][y].hasIntel)
+                        ctx.drawImage(intelImage, x*50, y*50 + 50);
+                        
+                }
+                //draw ninjas
+                if(map[x][y].hasNinja) {
+                    ctx.drawImage(ninjaImage,0,72,CHAR_WIDTH,CHAR_HEIGHT,
+					    x*50,y*50 + 50,CHAR_WIDTH,CHAR_HEIGHT);
+                }
+            
+                //draw Items
+                else if(map[x][y].hasItem == "Health") {
+                    ctx.drawImage(healthImage, x*50, y*50 + 50);
+                }
+                else if(map[x][y].hasItem == "Bullet") {
+                    ctx.drawImage(gunImage, x*50, y*50 + 50);
+                }
             }
         }
     }
@@ -197,7 +204,7 @@ function drawMap() {
 var charImage = new Image();
 charImage.ready = false;
 charImage.onload = setAssetReady;
-charImage.src = "assets/warrior_m.png";
+charImage.src = "assets/player.png";
 
 function setAssetReady()
 {
@@ -241,6 +248,18 @@ function keyUpHandler(event)
 	else if (keyPressed == "A" && gamePhase == "GameStarted" && player.xCoord > 0) {	
         moveLeft();
 	}
+	//Pause/Resume audio
+	else if (keyPressed == "M")
+	{
+        if (audioPaused){
+            audio.play();
+            audioPaused = false;
+        }
+        else {
+            audio.pause();
+            audioPaused = true;
+	    }
+	}
 	else if (keyPressed == "R") {	
         //if level is complete, allow the R button to reset game
         if(gamePhase == "Preload") {
@@ -258,7 +277,7 @@ function keyUpHandler(event)
             reset();
         }
         //if game is over, allow the R button to reset game
-        else if(gamePhase = "GameOver") {
+        else if(gamePhase == "GameOver") {
             gamePhase = "GameStarted";
             level = 1;
 		    lives = 3;
@@ -307,12 +326,13 @@ function moveUp() {
 	    grabItem(map[player.xCoord][player.yCoord].hasItem);
 	    map[player.xCoord][player.yCoord].hasItem="None";
 	}
-	//check if space has briefcase
-	else if(map[player.xCoord][player.yCoord].hasBriefcase) {
+	//check if space has intel
+	else if(map[player.xCoord][player.yCoord].hasIntel) {
 	    console.log("level done");
 	    levelComplete();
 	}
 	moveNinjas();
+	setFog();
 }
 
 function moveDown() {
@@ -328,11 +348,12 @@ function moveDown() {
 	    grabItem(map[player.xCoord][player.yCoord].hasItem);
 	    map[player.xCoord][player.yCoord].hasItem="None";
 	}
-	//check if space has briefcase
-	else if(map[player.xCoord][player.yCoord].hasBriefcase) {
+	//check if space has intel
+	else if(map[player.xCoord][player.yCoord].hasIntel) {
 	    levelComplete();
 	}
 	moveNinjas();
+	setFog();
 }
 
 function moveLeft() {
@@ -348,11 +369,12 @@ function moveLeft() {
 	    grabItem(map[player.xCoord][player.yCoord].hasItem);
 	    map[player.xCoord][player.yCoord].hasItem="None";
 	}
-	//check if space has briefcase
-	else if(map[player.xCoord][player.yCoord].hasBriefcase) {
+	//check if space has intel
+	else if(map[player.xCoord][player.yCoord].hasIntel) {
 	    levelComplete();
 	}
     moveNinjas();
+    setFog();
 }
 
 function moveRight() {
@@ -368,11 +390,12 @@ function moveRight() {
 	    grabItem(map[player.xCoord][player.yCoord].hasItem);
 	    map[player.xCoord][player.yCoord].hasItem="None";
 	}
-	//check if space has briefcase
-	else if(map[player.xCoord][player.yCoord].hasBriefcase) {
+	//check if space has intel
+	else if(map[player.xCoord][player.yCoord].hasIntel) {
 	    levelComplete();
 	}
 	moveNinjas();
+	setFog();
 }
 
 //Mobile input handlers
@@ -380,10 +403,16 @@ $("#game").swipe( {
     swipeUp:function(event, direction, distance, duration, fingerCount) {
         if(fingerCount == 2 ) {
             if (player.yCoord > 0)
-	        shoot(0);
+	            shoot(0);
         }
         else if (gamePhase == "GameStarted" && player.yCoord > 0) {
-            moveUp();
+            if(shootMode == true) {
+                shoot(0);
+                shootMode = false;
+                document.getElementById("mobile").innerHTML = "";
+            }
+            else
+                moveUp();
 	    }
     },
     swipeDown:function(event, direction, distance, duration, fingerCount) {
@@ -392,7 +421,13 @@ $("#game").swipe( {
 	            shoot(1);
         }
         else if (gamePhase == "GameStarted" && player.yCoord < 8) {
-            moveDown();
+            if(shootMode == true) {
+                shoot(1);
+                shootMode = false;
+                document.getElementById("mobile").innerHTML = "";
+            }
+            else
+                moveDown();
 	    }
     },
     swipeLeft:function(event, direction, distance, duration, fingerCount) {
@@ -401,6 +436,11 @@ $("#game").swipe( {
 	            shoot(2);
         }
         if (gamePhase == "GameStarted" && player.xCoord > 0) {
+            if(shootMode == true) {
+                shoot(2);
+                shootMode = false;
+                document.getElementById("mobile").innerHTML = "";
+            }
             moveLeft();
 	    }
     },
@@ -410,6 +450,11 @@ $("#game").swipe( {
 	            shoot(3);
         }
         if (gamePhase == "GameStarted" && player.xCoord < 8) {
+            if(shootMode == true) {
+                shoot(3);
+                shootMode = false;
+                document.getElementById("mobile").innerHTML = "";
+            }
             moveRight();
 	    }
     },
@@ -431,7 +476,7 @@ $("#game").swipe( {
             reset();
         }
         //if game is over, allow tap to reset game
-        else if(gamePhase = "GameOver") {
+        else if(gamePhase == "GameOver") {
             gamePhase = "GameStarted";
             level = 1;
 		    lives = 3;
@@ -440,6 +485,30 @@ $("#game").swipe( {
             healthPlaced = 1;
             score = 0;
             reset();
+        }
+        //enable shoot mode for one finger swipe shooting
+        else if (gamePhase == "GameStarted") {
+            //toggle shootmode
+            if (shootMode == false) {
+                shootMode = true;
+                document.getElementById("mobile").innerHTML = "Shoot Mode Enabled";
+            }
+            else {
+                shootMode = false;
+                document.getElementById("mobile").innerHTML = "Shoot Mode Disabled";
+            }
+        }
+    },
+    
+    //double tap to mute/unmute music
+    doubleTap:function(event, target) {
+        if(audioPaused) {
+            audioPaused = false;
+            audio.play();
+        }
+        else {
+            audioPaused = true;
+            audio.pause();
         }
     },
     
@@ -512,30 +581,36 @@ function grabItem(itemName) {
 }
 
 function shoot(dir) {
-    
-    //shoot up
-    bullets --;
-    if(dir === 0){
-        if (map[player.xCoord][player.yCoord - 1].hasNinja = true) {
-        
-            window.alert("shooting Ninja");
-            removeNinja(player.xCoord,player.yCoord - 1);
+    if (bullets > 0) {
+        bullets --;
+        //shoot up
+        if(dir === 0){
+            if (map[player.xCoord][player.yCoord - 1].hasNinja = true){ 
+                removeNinja(player.xCoord,player.yCoord - 1);
+                score += 50;
+            }
         }
-    }
-    //shoot down
-    else if (dir == 1) {
-        if (map[player.xCoord][player.yCoord + 1].hasNinja = true)
-            removeNinja(player.xCoord,player.yCoord + 1);
-    }
-    //shoot left
-    else if (dir == 2) {
-        if (map[player.xCoord - 1][player.yCoord].hasNinja = true)
-            removeNinja(player.xCoord - 1,player.yCoord);
-    }
-    //shoot right
-    else if (dir == 3) {
-        if (map[player.xCoord + 1][player.yCoord].hasNinja = true)
-            removeNinja(player.xCoord + 1,player.yCoord);
+        //shoot down
+        else if (dir == 1) {
+            if (map[player.xCoord][player.yCoord + 1].hasNinja = true) {
+                removeNinja(player.xCoord,player.yCoord + 1);
+                score += 50;
+            }
+        }
+        //shoot left
+        else if (dir == 2) {
+           if (map[player.xCoord - 1][player.yCoord].hasNinja = true) {
+                removeNinja(player.xCoord - 1,player.yCoord);
+                score += 50;
+           }
+        }
+        //shoot right
+        else if (dir == 3) {
+            if (map[player.xCoord + 1][player.yCoord].hasNinja = true) {
+                removeNinja(player.xCoord + 1,player.yCoord);
+                score += 50;
+            }
+        }
     }
 }
 
@@ -556,6 +631,31 @@ function setLevel() {
 
 //get methods
 
-function getHighScore(rank) {
-    
+
+function setFog() {
+    //turn fog of war on for all tiles
+    for (var y = 0; y < 9; y++) {
+        for (var x = 0; x < 9; x++) {
+            map[x][y].hasFog = true;
+        }
+    }
+    //Turn on fog on current space
+    map[player.xCoord][player.yCoord].hasFog = false;
+    //Turn on fog to the top
+    if(player.yCoord > 0)
+        map[player.xCoord][player.yCoord - 1].hasFog = false;
+    if(player.yCoord < 8)
+        map[player.xCoord][player.yCoord + 1].hasFog = false;
+    //Turn on fog to right
+    if(player.xCoord < 8)
+        map[player.xCoord+1][player.yCoord].hasFog = false;
+    //Turn on fog to left
+    if(player.xCoord > 0)
+        map[player.xCoord-1][player.yCoord].hasFog = false;
+
+}
+
+function playAudio() {
+    if(audioPaused == false)
+        audio.play();
 }

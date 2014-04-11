@@ -1,15 +1,15 @@
 //provides functions on map cells
 var map;
-var briefcaseLocation;
+var intelLocation;
 
 //constructor for a new Cell object
 function Cell() {
-    this.hasFog = true;
+    this.hasFog = false;
     this.hasNinja = false;
     this.hasSpy = false;
     this.hasItem = "None";
     this.isRoom = false;
-    this.hasBriefcase = false;
+    this.hasIntel = false;
 }
 
 //constructor for coordinate system
@@ -18,13 +18,13 @@ function Coordinates() {
     this.yCoord = 0;
 }
 
-//places a new briefcase in the map
-function placeBriefcase() {
-    //remove any old briefcases
+//places a new intel in the map
+function placeIntel() {
+    //remove any old intels
     for (var y = 0; y < 9; y++) {
 		for (var x = 0; x < 9; x++) {
             if(map[x][y].isRoom){
-            map[x][y].hasBriefcase = false;
+            map[x][y].hasIntel = false;
             }
         }
     }
@@ -34,52 +34,52 @@ function placeBriefcase() {
     //generate a random number between 0 and 8 to choose a room
     var room = Math.floor((Math.random()*9));
     
-    // place briefcase
+    // place intel
     switch (room) {
 		case 0: 
-			briefcaseLocation.xCoord = 1;
-			briefcaseLocation.yCoord = 1;
-			map[1][1].hasBriefcase = true;
+			intelLocation.xCoord = 1;
+			intelLocation.yCoord = 1;
+			map[1][1].hasIntel = true;
 			break;
 		case 1: 
-			briefcaseLocation.xCoord = 1;
-			briefcaseLocation.yCoord = 4;
-			map[1][4].hasBriefcase = true;
+			intelLocation.xCoord = 1;
+			intelLocation.yCoord = 4;
+			map[1][4].hasIntel = true;
 			break;
 		case 2: 
-			briefcaseLocation.xCoord = 1;
-			briefcaseLocation.yCoord = 7;
-			map[1][7].hasBriefcase = true;
+			intelLocation.xCoord = 1;
+			intelLocation.yCoord = 7;
+			map[1][7].hasIntel = true;
 			break;
 		case 3: 
-			briefcaseLocation.xCoord = 4;
-			briefcaseLocation.yCoord = 1;
-			map[4][1].hasBriefcase = true;
+			intelLocation.xCoord = 4;
+			intelLocation.yCoord = 1;
+			map[4][1].hasIntel = true;
 			break;
 		case 4: 
-			briefcaseLocation.xCoord = 4;
-			briefcaseLocation.yCoord = 4;
-			map[4][4].hasBriefcase = true;
+			intelLocation.xCoord = 4;
+			intelLocation.yCoord = 4;
+			map[4][4].hasIntel = true;
 			break;
 		case 5: 
-			briefcaseLocation.xCoord = 4;
-			briefcaseLocation.yCoord = 7;
-			map[4][7].hasBriefcase = true;
+			intelLocation.xCoord = 4;
+			intelLocation.yCoord = 7;
+			map[4][7].hasIntel = true;
 			break;
 		case 6: 
-			briefcaseLocation.xCoord = 7;
-			briefcaseLocation.yCoord = 1;
-			map[7][1].hasBriefcase = true;
+			intelLocation.xCoord = 7;
+			intelLocation.yCoord = 1;
+			map[7][1].hasIntel = true;
 			break;
 		case 7: 
-			briefcaseLocation.xCoord = 7;
-			briefcaseLocation.yCoord = 4;
-			map[7][4].hasBriefcase = true;
+			intelLocation.xCoord = 7;
+			intelLocation.yCoord = 4;
+			map[7][4].hasIntel = true;
 			break;
 		case 8: 
-			briefcaseLocation.xCoord = 7;
-			briefcaseLocation.yCoord = 7;
-			map[7][7].hasBriefcase = true;
+			intelLocation.xCoord = 7;
+			intelLocation.yCoord = 7;
+			map[7][7].hasIntel = true;
 			break;
 		default: 
 			break;
@@ -87,7 +87,7 @@ function placeBriefcase() {
 }
 
 function placeItems(bulletNumber, healthNumber) {
-    //remove any old briefcases
+    //remove any old intel
     for (var y = 0; y < 9; y++) {
 		for (var x = 0; x < 9; x++) {
             if(map[x][y].isRoom){
@@ -115,8 +115,8 @@ function placeItem(itemName) {
     while (itemPlaced === false) {
         switch (room) {
             case 0:
-                //check if room has briefcase, if it does, place in next room
-                if(map[1][1].hasBriefcase === true || map[1][1].hasItem != "None") {
+                //check if room has intel, if it does, place in next room
+                if(map[1][1].hasIntel === true || map[1][1].hasItem != "None") {
                     room = 1;
                 }
                 else {
@@ -125,8 +125,8 @@ function placeItem(itemName) {
                 }
 			break;
 		case 1: 
-            //check if room has briefcase, if it does, place in next room
-            if(map[1][4].hasBriefcase === true || map[1][4].hasItem != "None") {
+            //check if room has intel, if it does, place in next room
+            if(map[1][4].hasIntel === true || map[1][4].hasItem != "None") {
                 room = 2;
             }
             else {
@@ -135,8 +135,8 @@ function placeItem(itemName) {
             }
 			break;
 		case 2: 
-            //check if room has briefcase, if it does, place in next room
-            if(map[1][7].hasBriefcase === true || map[1][7].hasItem != "None") {
+            //check if room has intel, if it does, place in next room
+            if(map[1][7].hasIntel === true || map[1][7].hasItem != "None") {
                 room = 3;
             }
             else {
@@ -145,8 +145,8 @@ function placeItem(itemName) {
             }
 			break;
 		case 3: 
-			//check if room has briefcase, if it does, place in next room
-            if(map[4][1].hasBriefcase === true || map[4][1].hasItem != "None") {
+			//check if room has intel, if it does, place in next room
+            if(map[4][1].hasIntel === true || map[4][1].hasItem != "None") {
                 room = 4;
             }
             else {
@@ -155,8 +155,8 @@ function placeItem(itemName) {
             }
 			break;
 		case 4: 
-			//check if room has briefcase, if it does, place in next room
-            if(map[4][4].hasBriefcase === true || map[4][4].hasItem != "None") {
+			//check if room has intel, if it does, place in next room
+            if(map[4][4].hasIntel === true || map[4][4].hasItem != "None") {
                 room = 5;
             }
             else {
@@ -165,8 +165,8 @@ function placeItem(itemName) {
             }
 			break;
 		case 5: 
-            //check if room has briefcase, if it does, place in next room
-            if(map[4][7].hasBriefcase === true || map[4][7].hasItem != "None") {
+            //check if room has intel, if it does, place in next room
+            if(map[4][7].hasIntel === true || map[4][7].hasItem != "None") {
                 room = 6;
             }
             else {
@@ -175,8 +175,8 @@ function placeItem(itemName) {
                 }
 			break;
 		case 6: 
-			//check if room has briefcase, if it does, place in next room
-            if(map[7][1].hasBriefcase === true || map[7][1].hasItem != "None") {
+			//check if room has intel, if it does, place in next room
+            if(map[7][1].hasIntel === true || map[7][1].hasItem != "None") {
                 room = 7;
             }
             else {
@@ -185,8 +185,8 @@ function placeItem(itemName) {
             }
 			break;
 		case 7: 
-			//check if room has briefcase, if it does, place in next room
-            if(map[7][4].hasBriefcase === true || map[7][4].hasItem != "None") {
+			//check if room has intel, if it does, place in next room
+            if(map[7][4].hasIntel === true || map[7][4].hasItem != "None") {
                 room = 8;
             }
             else {
@@ -195,8 +195,8 @@ function placeItem(itemName) {
             }
 			break;
 		case 8: 
-			//check if room has briefcase, if it does, place in next room
-            if(map[7][7].hasBriefcase === true || map[7][7].hasItem != "None") {
+			//check if room has intel, if it does, place in next room
+            if(map[7][7].hasIntel === true || map[7][7].hasItem != "None") {
                 room = 0;
             }
             else {
@@ -261,5 +261,7 @@ function placeNinja() {
 				    break;
 				}
     }
+    
+
     
 }

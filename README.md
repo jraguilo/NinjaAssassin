@@ -24,4 +24,5 @@ David Nguyen
 
 Additional Credits:
 Touch Swipe JQuery Plugin - https://github.com/mattbryson/TouchSwipe-Jquery-Plugin
-Ninja and Player graphics by Antifarea - OpenGameArt.org
+Ninja and Player Graphics by Antifarea - OpenGameArt.org
+Background Music: "espionage" by Brandon Morris(brandon75689) - OpenGameArt.org

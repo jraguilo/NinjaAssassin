@@ -1,7 +1,7 @@
-var user1="user1", score1=300, 
-    user2="usertwo", score2=200, 
-    user3="userthree", score3=100;
-
+var user1="user1", score1="score1", 
+    user2="user2", score2="score2", 
+    user3="user3", score3="score3";
+var text ="";
 // Menu functions
 
 // Game Over menu displays when the player has lost all lives
@@ -30,11 +30,40 @@ function renderStart() {
     ctx.textAlign = 'center';
 	ctx.fillText("High Scores:", 225,150);
 	//get user and name
-	//user1=
+	getScores();
 	ctx.fillText("1. " + user1 + " - " + score1, 225,175);
 	ctx.fillText("2. " + user2 + " - " + score2, 225, 200);
 	ctx.fillText("3. " + user3 + " - " + score3, 225,225);
 	ctx.fillText("Press R to Start Game", 225,250);
+	
+	var error, message;
+	ctx.fillText("error: "+error,225,300);
+	ctx.fillText("message: "+message,225,320);
+}
+
+function getScores() {
+    
+    var request = $.ajax({
+                    //url: "/sinisterrecette/ninjaassassin/workspace/jsontest.txt", 
+                    url: "http://laravel-ninjaassasin.rhcloud.com/api/user/score",
+                    type: "get"
+                });
+    request.done(function (response, textStatus, jqXHR){
+        // log a message to the console
+        console.log(response);
+        
+        var data = JSON.parse(response);
+        user1 = data.user1;
+        user2 = data.user2;
+        user3 = data.user3;
+        score1 = data.score1;
+        score2 = data.score2;
+        score3 = data.score3;
+        error = data.error;
+        message = data.message;
+    });
+    
+    return 55555;
 }
 
 function renderComplete() {

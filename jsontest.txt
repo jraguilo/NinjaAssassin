@@ -1,1 +1,0 @@
-{"error":true,"message":"not loged in","score1":"56","score2":6632,"score3":"65453","0":200}

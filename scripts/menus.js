@@ -32,7 +32,7 @@ function renderStart() {
     ctx.textAlign = 'center';
 	ctx.fillText("High Scores:", 225,150);
 	//get user and name
-	if (scoresReceived = false) {
+	if (scoresReceived == false) {
 	    getScores();
 	    scoresReceived = true;
 	}
@@ -44,8 +44,8 @@ function renderStart() {
 	ctx.fillText("Press R to Start Game", 225, 300);
 	
 	//var error, message;
-	//ctx.fillText("error: "+error,225,300);
-	//ctx.fillText("message: "+message,225,320);
+	//ctx.fillText("error: "+error,225,350);
+	//ctx.fillText("message: "+message,225,375);
 }
 
 function getScores() {
@@ -59,7 +59,7 @@ function getScores() {
         // log a message to the console
         console.log(response);
         
-        var data = response;
+        var data = JSON.parse(response);
         user1 = data.user1;
         user2 = data.user2;
         user3 = data.user3;

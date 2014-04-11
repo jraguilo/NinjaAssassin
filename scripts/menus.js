@@ -32,7 +32,10 @@ function renderStart() {
     ctx.textAlign = 'center';
 	ctx.fillText("High Scores:", 225,150);
 	//get user and name
-	getScores();
+	if (scoresReceived = false) {
+	    getScores();
+	    scoresReceived = true;
+	}
 	ctx.fillText("1. " + user1 + " - " + score1, 225,175);
 	ctx.fillText("2. " + user2 + " - " + score2, 225, 200);
 	ctx.fillText("3. " + user3 + " - " + score3, 225,225);
@@ -56,7 +59,7 @@ function getScores() {
         // log a message to the console
         console.log(response);
         
-        var data = JSON.parse(response);
+        var data = response;
         user1 = data.user1;
         user2 = data.user2;
         user3 = data.user3;

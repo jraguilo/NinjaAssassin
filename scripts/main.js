@@ -12,6 +12,7 @@ var score;
 var username;
 var audio;
 var audioPaused;
+var scoresReceived = false;
 
 //Create the canvas
 var canvas = document.getElementById("game");
@@ -38,7 +39,7 @@ function preloading()
         audioPaused = false;
         audio.addEventListener("ended", playAudio, false);
 		//start game loop
-        gameloop = setInterval(update, TIME_PER_FRAME);	
+        gameloop = setInterval(update, TIME_PER_FRAME);
 	}
 }
 
@@ -557,8 +558,10 @@ function attack() {
         //TODO submit score
         //send variable score
         //check if online
-        if(navigator.onLine)
+        if(navigator.onLine) {
             sendScore(username,score);
+            scoresReceived = false;
+        }
     } 
     else {
         gamePhase = "LostLife";
